@@ -549,12 +549,32 @@ void CSpyToolDlg::OnBnClickedButtonLoad()
 
 bool CSpyToolDlg::SaveList2InfFile(void)
 {
+
+	// First remove any existing CON_xxxxx sections so we don't leave stale entries
+	CString iniPath = m_IniFile.GetIniFile();
+	TCHAR szAppName[20];
+	TCHAR szTemp[MAX_PATH];
+	int iCounter = 1;
+
+	for (;;)
+	{
+		wsprintf(szAppName, _T("CON_%05d"), iCounter++);
+		// if there's no TYPE key for this section, assume no more entries
+		if (GetPrivateProfileString(szAppName, _T("TYPE"), NULL, szTemp, MAX_PATH, iniPath) == 0)
+			break;
+
+		// delete the entire section
+		WritePrivateProfileString(szAppName, NULL, NULL, iniPath);
+	}
+
+	// Write current in-memory list back to the INI
 	int i = 1;
 	for (auto& link : m_LinkageItemList)
 	{
 		m_IniFile.InsertData(i++, &link);
 	}
 	return true;
+
 }
 
 void CSpyToolDlg::OnCbnSelchangeComboFilterType()
